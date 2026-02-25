@@ -11,6 +11,14 @@ CORS(app)
 
 # AI Configuration
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+print("--- DEBUG: LISTING MODELS ---")
+try:
+    for m in genai.list_models():
+        if 'generateContent' in m.supported_generation_methods:
+            print(f"AVAILABLE MODEL: {m.name}")
+except Exception as e:
+    print(f"COULD NOT LIST MODELS: {e}")
+print("--- END DEBUG ---")
 model = genai.GenerativeModel('gemini-2.0-flash')
 
 API_KEY = os.getenv("WEATHER_API_KEY")
