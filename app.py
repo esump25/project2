@@ -11,7 +11,7 @@ CORS(app)
 
 # AI Configuration
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-1.5-pro')
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 API_KEY = os.getenv("WEATHER_API_KEY")
 
