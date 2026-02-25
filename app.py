@@ -11,7 +11,7 @@ CORS(app)
 
 # AI Configuration
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
+model = genai.GenerativeModel('gemini-1.5-pro')
 
 API_KEY = os.getenv("WEATHER_API_KEY")
 
@@ -52,8 +52,8 @@ def get_itinerary():
         return jsonify({"itinerary": response.text})
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({"error": "AI could not generate itinerary"}), 500
-
+        return jsonify({"error": str(e)}), 500
+    
 if __name__ == '__main__':
     # Use 0.0.0.0 for Render deployment
     app.run(debug=True, host='0.0.0.0', port=5001)
