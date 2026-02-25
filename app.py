@@ -19,7 +19,7 @@ try:
 except Exception as e:
     print(f"COULD NOT LIST MODELS: {e}")
 print("--- END DEBUG ---")
-model = genai.GenerativeModel('gemini-2.5-flash-lite')
+model = genai.GenerativeModel('gemini-2.0-flash-lite')
 
 API_KEY = os.getenv("WEATHER_API_KEY")
 
@@ -47,12 +47,12 @@ def get_itinerary():
     
     # Constructing a highly tailored prompt
     prompt = (
-        f"Act as a professional travel guide. Create a custom itinerary for {city}. "
-        f"The traveler is a {traveler} looking for a {duration} trip with a {budget} budget. "
-        f"Their main agenda is {activity} and they want a daily pace that is {pace}. "
-        f"Make sure to recommend specific dining spots for {cuisine} food. "
-        f"Keep the formatting clean: use 'Day X' headings and short bullet points. "
-        f"Do not use markdown bolding (**)."
+    f"Act as a professional travel guide. Task: Create a concise travel itinerary for {city}. "
+    f"Traveler Profile: {traveler}. Duration: {duration}. Budget: {budget}. "
+    f"Focus: {activity}. Pace: {pace}. Dining: {cuisine}. "
+    f"Output Structure: Use 'Day X' headings followed by 3-4 simple bullet points per day. "
+    f"Style: Plain text only. No bolding. No introduction. No conclusion. "
+    f"Limit: Maximum 500 words."
     )
     
     try:
