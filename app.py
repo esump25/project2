@@ -1,35 +1,46 @@
+import google.generativeai as genai
 import os
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-from google import genai  # <--- Updated to the new 2026 SDK
 
 load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# 1. New Client Initialization (Pick up API key from env)
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+# AI Configuration
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+print("--- DEBUG: LISTING MODELS ---")
+try:
+    for m in genai.list_models():
+        if 'generateContent' in m.supported_generation_methods:
+            print(f"AVAILABLE MODEL: {m.name}")
+except Exception as e:
+    print(f"COULD NOT LIST MODELS: {e}")
+print("--- END DEBUG ---")
+model = genai.GenerativeModel('gemini-2.0-flash-lite')
 
-# 2. Heartbeat route to prevent Render 404 health-check failures
+API_KEY = os.getenv("WEATHER_API_KEY")
+
 @app.route('/')
 def home():
-    return "Travel Backend is Live!"
+    return "Server is up!"
 
 @app.route('/api/weather', methods=['GET'])
 def get_weather():
     city = request.args.get('city')
-    API_KEY = os.getenv("WEATHER_API_KEY")
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&appid={API_KEY}"
     try:
         r = requests.get(url)
         return jsonify(r.json())
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except:
+        return jsonify({"error": "failed"}), 500
 
+# NEW: AI Itinerary Route
 @app.route('/api/itinerary', methods=['GET'])
 def get_itinerary():
+    # Catching all the specific user answers from the frontend request
     city = request.args.get('city')
     budget = request.args.get('budget')
     activity = request.args.get('activity')
@@ -38,26 +49,23 @@ def get_itinerary():
     cuisine = request.args.get('cuisine')
     pace = request.args.get('pace')
     
-    # 3. Optimized Prompt for 2026 Speed (under 250 words)
+    # Constructing a highly tailored prompt
     prompt = (
-        f"Professional travel guide mode. Task: Create a concise travel itinerary for {city}. "
-        f"Profile: {traveler}, {duration}, {budget} budget. "
-        f"Agenda: {activity}. Pace: {pace}. Cuisine: {cuisine}. "
-        f"Instructions: Start directly with 'Day 1'. Use bullet points only. "
-        f"Style: Plain text. No bolding (**). No intro or outro. "
-        f"Constraint: Maximum 250 words total."
+    f"Act as a professional travel guide. Task: Create a concise travel itinerary for {city}. "
+    f"Traveler Profile: {traveler}. Duration: {duration}. Budget: {budget}. "
+    f"Focus: {activity}. Pace: {pace}. Dining: {cuisine}. "
+    f"Output Structure: Use 'Day X' headings followed by 3-4 simple bullet points per day. "
+    f"Style: Plain text only. No bolding. No introduction. No conclusion. "
+    f"Limit: Maximum 250 words."
     )
     
     try:
-        # 4. Using the faster 2026 generation method
-        response = client.models.generate_content(
-            model='gemini-2.0-flash-lite',
-            contents=prompt
-        )
+        response = model.generate_content(prompt)
         return jsonify({"itinerary": response.text})
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({"error": "The AI is taking a siesta. Try a shorter duration!"}), 500
+        return jsonify({"error": str(e)}), 500
     
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(debug=True, host='0.0.0.0', port=port)
