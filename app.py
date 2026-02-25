@@ -19,7 +19,7 @@ try:
 except Exception as e:
     print(f"COULD NOT LIST MODELS: {e}")
 print("--- END DEBUG ---")
-model = genai.GenerativeModel('gemini-2.0-flash')
+model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
 API_KEY = os.getenv("WEATHER_API_KEY")
 
