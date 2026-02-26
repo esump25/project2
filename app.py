@@ -11,7 +11,7 @@ CORS(app)
 
 # 1. Direct configuration is safer for Cloud
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-2.0-flash')
+model = genai.GenerativeModel('gemini-3-flash-preview')
 
 @app.route('/')
 def home():
