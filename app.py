@@ -9,54 +9,43 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# AI Configuration
+# 1. Direct configuration is safer for Cloud
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-print("--- DEBUG: LISTING MODELS ---")
-try:
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            print(f"AVAILABLE MODEL: {m.name}")
-except Exception as e:
-    print(f"COULD NOT LIST MODELS: {e}")
-print("--- END DEBUG ---")
 model = genai.GenerativeModel('gemini-2.0-flash-lite')
-
-API_KEY = os.getenv("WEATHER_API_KEY")
 
 @app.route('/')
 def home():
-    return "Server is up!"
+    return "Server is live!"
 
 @app.route('/api/weather', methods=['GET'])
 def get_weather():
     city = request.args.get('city')
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&appid={API_KEY}"
+    # 2. Pull key inside the route for reliability
+    w_key = os.environ.get("WEATHER_API_KEY")
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&appid={w_key}"
     try:
-        r = requests.get(url)
+        r = requests.get(url, timeout=10) # Added timeout so it doesn't hang
         return jsonify(r.json())
     except:
         return jsonify({"error": "failed"}), 500
 
-# NEW: AI Itinerary Route
 @app.route('/api/itinerary', methods=['GET'])
 def get_itinerary():
-    # Catching all the specific user answers from the frontend request
     city = request.args.get('city')
-    budget = request.args.get('budget')
+    budget = request.args.get('budget') 
     activity = request.args.get('activity')
     duration = request.args.get('duration')
     traveler = request.args.get('traveler')
     cuisine = request.args.get('cuisine')
     pace = request.args.get('pace')
     
-    # Constructing a highly tailored prompt
+    # 3. Short prompt = Fast response = No Timeout
     prompt = (
-    f"Act as a professional travel guide. Task: Create a concise travel itinerary for {city}. "
-    f"Traveler Profile: {traveler}. Duration: {duration}. Budget: {budget}. "
-    f"Focus: {activity}. Pace: {pace}. Dining: {cuisine}. "
-    f"Output Structure: Use 'Day X' headings followed by 3-4 simple bullet points per day. "
-    f"Style: Plain text only. No bolding. No introduction. No conclusion. "
-    f"Limit: Maximum 250 words."
+        f"Create a travel itinerary for {city}. "
+        f"Trip Details: {duration} trip, {budget} budget, {traveler} style. "
+        f"Focus: {activity} and {cuisine} food. Pace: {pace}. "
+        f"Format: Day X headings with 3 short bullet points. "
+        f"Style: Plain text. No bolding. No intro. Max 200 words."
     )
     
     try:
@@ -64,8 +53,9 @@ def get_itinerary():
         return jsonify({"itinerary": response.text})
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify({"error": str(e)}), 500
-    
+        return jsonify({"error": "AI taking too long, try again"}), 500
+
 if __name__ == '__main__':
+    # This line is the 'Secret Sauce' for Render
     port = int(os.environ.get("PORT", 5001))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=False, host='0.0.0.0', port=port)
