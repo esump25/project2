@@ -36,14 +36,13 @@ def get_itinerary():
     activity = request.args.get('activity')
     duration = request.args.get('duration')
     traveler = request.args.get('traveler')
-    cuisine = request.args.get('cuisine')
     pace = request.args.get('pace')
     
     # 3. Short prompt = Fast response = No Timeout
     prompt = (
         f"Create a travel itinerary for {city}. "
         f"Trip Details: {duration} trip, {budget} budget, {traveler} style. "
-        f"Focus: {activity} and {cuisine} food. Pace: {pace}. "
+        f"Focus: {activity} and food from {city}. Pace: {pace}. "
         f"Format: Day X headings with 3 short bullet points. "
         f"Style: Plain text. No bolding. No intro. Max 200 words."
     )
